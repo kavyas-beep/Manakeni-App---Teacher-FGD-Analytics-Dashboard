@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manakeni App - Teacher FGD Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .metric-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .metric-number {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .metric-label {
+            font-size: 0.9rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .schools { color: #4CAF50; }
+        .teachers { color: #2196F3; }
+        .participation { color: #FF9800; }
+        .zones { color: #9C27B0; }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .chart-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .chart-container:hover {
+            transform: translateY(-3px);
+        }
+
+        .chart-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            text-align: center;
+        }
+
+        .zone-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .zone-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid;
+            transition: transform 0.3s ease;
+        }
+
+        .zone-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .zone-card.cauvery { border-left-color: #FF6B6B; }
+        .zone-card.kurinji { border-left-color: #4ECDC4; }
+        .zone-card.vaigai { border-left-color: #45B7D1; }
+        .zone-card.marutham { border-left-color: #96CEB4; }
+        .zone-card.porunai { border-left-color: #FECA57; }
+
+        .zone-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        .zone-highlight {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+
+        .priority-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 25px 0;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .priority-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .priority-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .priority-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .priority-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .priority-list li {
+            padding: 5px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .priority-list li::before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: #FFD700;
+            font-weight: bold;
+        }
+
+        .recommendations {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 25px 0;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .rec-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .rec-section h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #3498db;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .positive { background: #d4edda; color: #155724; }
+        .warning { background: #fff3cd; color: #856404; }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .rec-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+        }
+
+        .interactive-element {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .interactive-element:hover {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>📚 Manakeni App - Teacher FGD Analytics Dashboard</h1>
+            <p>Focused Group Discussions Analysis | June - August 2025 | Tamil Nadu Government Schools</p>
+            <div style="margin-top: 15px; font-size: 0.9rem; opacity: 0.8;">
+                🎯 Making Education Democratic & Accessible | 🌍 Bilingual Learning (Tamil & English)
+            </div>
+        </div>
+
+        <!-- Key Metrics -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-number schools">20</div>
+                <div class="metric-label">Government Schools</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-number teachers">246</div>
+                <div class="metric-label">Teachers Engaged</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-number participation">65%</div>
+                <div class="metric-label">Response Rate</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-number zones">5</div>
+                <div class="metric-label">Academic Zones</div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="dashboard-grid">
+            <div class="chart-container">
+                <h3 class="chart-title">📊 Teacher Participation by Zone</h3>
+                <canvas id="participationChart" width="400" height="300"></canvas>
+            </div>
+            <div class="chart-container">
+                <h3 class="chart-title">📈 Subject Distribution</h3>
+                <canvas id="subjectChart" width="400" height="300"></canvas>
+            </div>
+        </div>
+
+        <!-- Zone-wise Analysis -->
+        <div class="zone-cards">
+            <div class="zone-card cauvery">
+                <div class="zone-title">🌊 CAUVERY ZONE</div>
+                <div class="zone-highlight">
+                    <strong>Key Insights:</strong>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li>Pronunciation errors in content identified</li>
+                        <li>Need for real-life examples in Quantum Mechanics</li>
+                        <li>High demand for AI & modern tech videos</li>
+                    </ul>
+                </div>
+                <span class="status-indicator warning">Action Required</span>
+            </div>
+
+            <div class="zone-card kurinji">
+                <div class="zone-title">🏔️ KURINJI ZONE</div>
+                <div class="zone-highlight">
+                    <strong>Key Insights:</strong>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li>Prefer bilingual + footage-based content</li>
+                        <li>Effective quiz implementation appreciated</li>
+                        <li>Need layered learning structure</li>
+                    </ul>
+                </div>
+                <span class="status-indicator positive">High Engagement</span>
+            </div>
+
+            <div class="zone-card vaigai">
+                <div class="zone-title">🌾 VAIGAI ZONE</div>
+                <div class="zone-highlight">
+                    <strong>Key Insights:</strong>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li>Videos too long (30-40 min issues)</li>
+                        <li>Chrome tab cheating concerns</li>
+                        <li>Missing NEET/JEE solutions</li>
+                    </ul>
+                </div>
+                <span class="status-indicator warning">Technical Issues</span>
+            </div>
+
+            <div class="zone-card marutham">
+                <div class="zone-title">🌱 MARUTHAM ZONE</div>
+                <div class="zone-highlight">
+                    <strong>Key Insights:</strong>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li>More NCERT content needed for CUET</li>
+                        <li>Board-teaching style not student-friendly</li>
+                        <li>Animation videos requested</li>
+                    </ul>
+                </div>
+                <span class="status-indicator warning">Content Gaps</span>
+            </div>
+
+            <div class="zone-card porunai">
+                <div class="zone-title">🏞️ PORUNAI ZONE</div>
+                <div class="zone-highlight">
+                    <strong>Key Insights:</strong>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li>GeoGebra integration suggested</li>
+                        <li>Need for math kits & worksheets</li>
+                        <li>Dedicated class periods recommended</li>
+                    </ul>
+                </div>
+                <span class="status-indicator positive">Innovative Ideas</span>
+            </div>
+        </div>
+
+        <!-- Priority Topics -->
+        <div class="priority-section">
+            <h2 style="text-align: center; margin-bottom: 30px; color: #2c3e50; font-size: 1.8rem;">
+                🎯 Priority Content Development Areas
+            </h2>
+            <div class="priority-grid">
+                <div class="priority-card">
+                    <div class="priority-title">📐 Mathematics</div>
+                    <ul class="priority-list">
+                        <li>Differential Equations & Integration</li>
+                        <li>Limits and Continuity</li>
+                        <li>Trigonometry (Sine/Cosine Laws)</li>
+                        <li>Math in AI Applications</li>
+                    </ul>
+                </div>
+                
+                <div class="priority-card">
+                    <div class="priority-title">🔬 Science</div>
+                    <ul class="priority-list">
+                        <li>Grade 11: Photosynthesis</li>
+                        <li>Quantum Mechanical Model</li>
+                        <li>Genetics - Crossing Over</li>
+                        <li>Bacteria & Fungi</li>
+                    </ul>
+                </div>
+                
+                <div class="priority-card">
+                    <div class="priority-title">💼 Commerce & Business</div>
+                    <ul class="priority-list">
+                        <li>SEBI & Capital Market</li>
+                        <li>Types of Entrepreneurs</li>
+                        <li>BRS & Error Rectification</li>
+                        <li>Consumer Protection Act</li>
+                    </ul>
+                </div>
+                
+                <div class="priority-card">
+                    <div class="priority-title">🎯 General Requirements</div>
+                    <ul class="priority-list">
+                        <li>NCERT-based CUET content</li>
+                        <li>Tamil language support</li>
+                        <li>Shorter video durations</li>
+                        <li>Interactive assessments</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recommendations -->
+        <div class="recommendations">
+            <h2 style="text-align: center; margin-bottom: 30px; color: #2c3e50; font-size: 1.8rem;">
+                🚀 Strategic Recommendations
+            </h2>
+            <div class="rec-grid">
+                <div class="rec-section">
+                    <h3>✅ Immediate Actions</h3>
+                    <ul style="padding-left: 20px; line-height: 1.6;">
+                        <li>Implement Tamil translations for all forms</li>
+                        <li>Reschedule FGDs to 1:00-2:00 PM</li>
+                        <li>Add Google Meet attendance tracking</li>
+                        <li>Share video links in advance</li>
+                        <li>Create shorter video segments (under 10 min)</li>
+                    </ul>
+                </div>
+                
+                <div class="rec-section">
+                    <h3>📈 Long-term Improvements</h3>
+                    <ul style="padding-left: 20px; line-height: 1.6;">
+                        <li>Develop bilingual content systematically</li>
+                        <li>Integrate GeoGebra for visual math learning</li>
+                        <li>Create layered learning structure</li>
+                        <li>Add NEET/JEE specific solutions</li>
+                        <li>Implement anti-cheating measures</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Success Metrics -->
+        <div class="priority-section">
+            <h2 style="text-align: center; margin-bottom: 30px; color: #2c3e50; font-size: 1.8rem;">
+                📊 FGD Session Performance
+            </h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                <div>
+                    <h3 style="color: #27ae60; margin-bottom: 15px;">✅ Positive Highlights</h3>
+                    <ul style="padding-left: 20px; line-height: 1.8;">
+                        <li>Videos well-received for clarity & content quality</li>
+                        <li>Teachers appreciated 3D visuals & crisp explanations</li>
+                        <li>100% attendance achieved in some sessions</li>
+                        <li>Constructive feedback from engaged teachers</li>
+                        <li>Technical sessions ran smoothly without glitches</li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 style="color: #e74c3c; margin-bottom: 15px;">⚠️ Areas for Enhancement</h3>
+                    <ul style="padding-left: 20px; line-height: 1.8;">
+                        <li>Increase teacher participation & engagement</li>
+                        <li>Address network connectivity issues</li>
+                        <li>Provide more specific, actionable feedback</li>
+                        <li>Improve video sequencing in app</li>
+                        <li>Add more exam-oriented content</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Participation Chart
+        const participationCtx = document.getElementById('participationChart').getContext('2d');
+        new Chart(participationCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Cauvery', 'Kurinji', 'Vaigai', 'Marutham', 'Porunai'],
+                datasets: [{
+                    data: [25, 38, 83, 47, 53], // Approximate teacher counts per zone
+                    backgroundColor: [
+                        '#FF6B6B',
+                        '#4ECDC4', 
+                        '#45B7D1',
+                        '#96CEB4',
+                        '#FECA57'
+                    ],
+                    borderWidth: 3,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': ' + context.parsed + ' teachers';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Subject Distribution Chart
+        const subjectCtx = document.getElementById('subjectChart').getContext('2d');
+        new Chart(subjectCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'Commerce', 'Economics'],
+                datasets: [{
+                    label: 'Number of Teachers',
+                    data: [45, 38, 42, 25, 18, 12], // Approximate counts
+                    backgroundColor: [
+                        '#FF6B6B',
+                        '#4ECDC4', 
+                        '#45B7D1',
+                        '#96CEB4',
+                        '#FECA57',
+                        '#FF8A80'
+                    ],
+                    borderRadius: 8,
+                    borderSkipped: false,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0,0,0,0.1)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+        // Add hover effects to interactive elements
+        document.querySelectorAll('.metric-card, .zone-card, .chart-container').forEach(element => {
+            element.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-5px)';
+                this.style.boxShadow = '0 12px 40px rgba(0, 0, 0, 0.15)';
+            });
+            
+            element.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+                this.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.1)';
+            });
+        });
+
+        // Add click functionality to zone cards for detailed view
+        document.querySelectorAll('.zone-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const zoneName = this.querySelector('.zone-title').textContent;
+                alert(`Detailed analysis for ${zoneName} - Feature coming soon!`);
+            });
+        });
+    </script>
+</body>
+</html>
